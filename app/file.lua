@@ -36,6 +36,6 @@ if strlib.empty(file) then
     ngx.exit(ngx.status)
 end
 
-os.execute("cp " .. file .. " " .. login .. ".zip")
+os.execute("cp " .. file .. " /data/" .. login .. ".zip")
 
 ngx.say("success\n")
