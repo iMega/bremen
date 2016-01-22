@@ -56,4 +56,4 @@ end
 
 local token = auth.getToken(validData["login"])
 
-ngx.say("success\nbla\n" .. token)
+ngx.say("success\ntoken\n" .. token)

@@ -3,8 +3,6 @@ local strlib = require "imega.string"
 
 local headers = ngx.req.get_headers()
 
-ngx.say(inspect(headers))
-
 if strlib.empty(headers["cookie"]) then
     ngx.status = ngx.HTTP_BAD_REQUEST
     ngx.say("failure\n");

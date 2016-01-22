@@ -1,30 +1,41 @@
 local inspect = require("kikito.inspect")
-local upload = require("resty.upload")
+local auth   = require "imega.auth"
+local strlib = require "imega.string"
 
-local chunk_size = 8192
+local headers = ngx.req.get_headers()
 
-local form, err = upload:new(chunk_size)
-if not form then
-    ngx.log(ngx.ERR, "failed to new upload: ", err)
-    ngx.exit(500)
+if strlib.empty(headers["cookie"]) then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.say("failure\n");
+    ngx.exit(ngx.status)
 end
 
-form:set_timeout(1000)
+local matchPiece = ngx.re.match(headers["cookie"], "token=([a-f0-9-]+)")
 
-while true do
-    local typ, res, err = form:read()
-    if not typ then
-        ngx.say("failed to read: ", err)
-        return
-    end
-
-    ngx.say("read: ", inspect({typ, res}))
-
-    if typ == "eof" then
-        break
-    end
+if strlib.empty(matchPiece[1]) then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.say("failure\n");
+    ngx.exit(ngx.status)
 end
 
-local typ, res, err = form:read()
+local token = matchPiece[1]
 
-ngx.say("read: ", inspect({typ, res}))
+if false == strlib.empty(auth.checkToken()) then
+    ngx.status = ngx.HTTP_UNAUTHORIZED
+    ngx.say("failure\n");
+    ngx.exit(ngx.status)
+end
+
+ngx.req.read_body()
+
+local file = ngx.req.get_body_file()
+
+if strlib.empty(file) then
+    ngx.status = ngx.HTTP_BAD_REQUEST
+    ngx.say("failure\n");
+    ngx.exit(ngx.status)
+end
+
+os.execute("cp " .. file .. " " .. login .. ".zip")
+
+ngx.say("success\n")

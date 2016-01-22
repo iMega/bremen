@@ -8,4 +8,6 @@ RUN apk add --update nginx-lua && \
 
 COPY . /
 
+VOLUME ["/data"]
+
 CMD ["/usr/sbin/nginx", "-g", "daemon off;", "-p", "/app", "-c", "/nginx.conf"]
