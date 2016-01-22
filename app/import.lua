@@ -41,16 +41,4 @@ if false == auth.checkToken(token) then
     ngx.exit(ngx.status)
 end
 
-ngx.req.read_body()
-
-local file = ngx.req.get_body_file()
-
-if strlib.empty(file) then
-    ngx.status = ngx.HTTP_BAD_REQUEST
-    ngx.say("failure\n");
-    ngx.exit(ngx.status)
-end
-
-os.execute("cp " .. file .. " /data/" .. login .. ".zip")
-
 ngx.say("success\n")
