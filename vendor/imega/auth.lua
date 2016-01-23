@@ -14,17 +14,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-local redis = require "resty.redis"
 local uuid = require "tieske.uuid"
-local db = redis:new()
-db:set_timeout(1000)
-
-local ok, err = db:connect(ngx.var.redis_ip, ngx.var.redis_port)
-if not ok then
-    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say(err)
-    ngx.exit(ngx.status)
-end
 
 --
 -- Generate token
@@ -32,7 +22,8 @@ end
 -- @return string
 --
 local function generateToken()
-    return uuid.new()
+    uuid.randomseed(os.time())
+    return uuid()
 end
 
 --
@@ -40,26 +31,25 @@ end
 --
 -- @return bool
 --
-local function auth(login, pass)
+local function auth(db, login, pass)
     local result = false
     local res, err = db:get("auth:" .. login)
-
     if res == pass then
         result = true
         local token = generateToken()
-        local res, err = db:set("login2token:" .. login, token)
+        local ok, err = db:set("login2token:" .. login, token)
         if not ok then
             result = false
         end
-        local res, err = db:expire("login2token:" .. login, 600)
+        local ok, err = db:expire("login2token:" .. login, 600)
         if not ok then
             result = false
         end
-        local res, err = db:set("token2login:" .. token, login)
+        local ok, err = db:set("token2login:" .. token, login)
         if not ok then
             result = false
         end
-        local res, err = db:expire("token2login:" .. token, 600)
+        local ok, err = db:expire("token2login:" .. token, 600)
         if not ok then
             result = false
         end
@@ -73,7 +63,7 @@ end
 --
 -- @return string
 --
-local function getToken(login)
+local function getToken(db, login)
     local result = ""
     local res, err = db:get("login2token:" .. login)
     if res then
@@ -88,7 +78,7 @@ end
 --
 -- @return bool
 --
-local function checkToken(token)
+local function checkToken(db, token)
     local result = false
     local res, err = db:get("token2login:" .. token)
     if res then
@@ -98,8 +88,24 @@ local function checkToken(token)
     return result
 end
 
+--
+-- Check token
+--
+-- @return string
+--
+local function getLogin(db, token)
+    local result = ""
+    local res, err = db:get("token2login:" .. token)
+    if res then
+        result = res
+    end
+
+    return result
+end
+
 return {
     authenticate = auth,
     getToken     = getToken,
-    checkToken   = checkToken
+    checkToken   = checkToken,
+    getLogin     = getLogin
 }

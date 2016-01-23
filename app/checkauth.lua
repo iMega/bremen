@@ -14,11 +14,12 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-local base64 = require("kloss.base64")
 require "resty.validation.ngx"
 local validation = require "resty.validation"
-local auth = require "imega.auth"
-local strlib = require "imega.string"
+local base64     = require "kloss.base64"
+local redis      = require "resty.redis"
+local auth       = require "imega.auth"
+local strlib     = require "imega.string"
 
 local headers = ngx.req.get_headers()
 
@@ -46,7 +47,7 @@ local credentials = {
 
 local validatorCredentials = validation.new{
     login = validation.string.trim:len(36,36),
-    pass  = validation.string.trim:maxlen(36)
+    pass  = validation.string.trim:len(36,36)
 }
 
 local isValid, values = validatorCredentials(credentials)
@@ -58,12 +59,21 @@ end
 
 local validData = values("valid")
 
-if not auth.authenticate(validData["login"], validData["pass"]) then
+local db = redis:new()
+db:set_timeout(1000)
+local ok, err = db:connect(ngx.var.redis_ip, ngx.var.redis_port)
+if not ok then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.say(err)
+    ngx.exit(ngx.status)
+end
+
+if not auth.authenticate(db, validData["login"], validData["pass"]) then
     ngx.status = ngx.HTTP_FORBIDDEN
     ngx.say("failure\n");
     ngx.exit(ngx.status)
 end
 
-local token = auth.getToken(validData["login"])
+local token = auth.getToken(db, validData["login"])
 
 ngx.say("success\ntoken\n" .. token)

@@ -15,6 +15,7 @@
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 local auth   = require "imega.auth"
+local redis  = require "resty.redis"
 local strlib = require "imega.string"
 
 local headers = ngx.req.get_headers()
@@ -35,7 +36,16 @@ end
 
 local token = matchPiece[1]
 
-if false == auth.checkToken(token) then
+local db = redis:new()
+db:set_timeout(1000)
+local ok, err = db:connect(ngx.var.redis_ip, ngx.var.redis_port)
+if not ok then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.say(err)
+    ngx.exit(ngx.status)
+end
+
+if false == auth.checkToken(db, token) then
     ngx.status = ngx.HTTP_UNAUTHORIZED
     ngx.say("failure\n");
     ngx.exit(ngx.status)

@@ -1,12 +1,27 @@
 IMAGE = imega/bremen
-CONTAINERS = imega_bremen
+CONTAINERS = imega_bremen imega_bremen_db
 PORT = -p 80:80
+REDIS_PORT = 6379
 
 build:
 	@docker build -t $(IMAGE) .
 
-start:
+prestart:
+	@docker run -d --name imega_bremen_db leanlabs/redis
+
+start:prestart
+	@while [ "`docker inspect -f {{.State.Running}} imega_bremen_db`" != "true" ]; do \
+		@echo "wait db"; sleep 0.3; \
+	done
+	$(eval REDIS_IP = $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' imega_bremen_db))
+	@docker exec imega_bremen_db \
+		sh -c "echo SET auth:9915e49a-4de1-41aa-9d7d-c9a687ec048d 8c279a62-88de-4d86-9b65-527c81ae767a | redis-cli --pipe"
+
 	@docker run -d --name imega_bremen \
+		--env REDIS_IP=$(REDIS_IP) \
+		--env REDIS_PORT=$(REDIS_PORT) \
+		-v $(CURDIR)/app:/app \
+		-v $(CURDIR)/data:/data \
 		$(PORT) \
 		$(IMAGE)
 
