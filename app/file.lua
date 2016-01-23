@@ -64,5 +64,5 @@ end
 local login = auth.getLogin(db, token)
 
 os.execute("cp -f " .. file .. " /data/" .. login .. ".zip")
-os.execute("cp -fr /var/lib/nginx/tmp/client_body/* /data/")
+
 ngx.say("success\n" .. file)
