@@ -13,7 +13,9 @@ build:
 	@docker build -t $(IMAGE) .
 
 prestart:
-	@docker run -d --name imega_bremen_db leanlabs/redis
+	@docker run -d --name imega_bremen_db \
+		-v $(STORAGE_FOLDER):/data \
+		leanlabs/redis
 
 start:prestart
 	@while [ "`docker inspect -f {{.State.Running}} imega_bremen_db`" != "true" ]; do \
