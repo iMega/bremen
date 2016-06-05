@@ -65,4 +65,6 @@ local login = auth.getLogin(db, token)
 
 os.execute("cp -f " .. file .. " /data/" .. login .. ".zip")
 
+os.execute("rsync --inplace -a /data/" .. login .. ".zip" .. " rsync://fileman:873/zip")
+
 ngx.say("success\n" .. file)
