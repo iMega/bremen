@@ -88,7 +88,7 @@ function init
             ZIP=${PARAM[1]}
         fi
         if [[ ${PARAM[0]} == 'file_limit' ]]; then
-            LIMIT=${PARAM[1]}
+            LIMIT=-1 #${PARAM[1]}
         else
             LIMIT=-1
         fi
