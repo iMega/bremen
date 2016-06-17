@@ -88,7 +88,7 @@ function init
             ZIP=${PARAM[1]}
         fi
         if [[ ${PARAM[0]} == 'file_limit' ]]; then
-            LIMIT=-1 #${PARAM[1]}
+            LIMIT=${PARAM[1]}
         else
             LIMIT=-1
         fi
@@ -103,11 +103,11 @@ function init
     for file in $tmp/*; do
         if [[ -f $file ]]; then
             if [ $LIMIT -gt 0 ]; then
-                eval $(stat -s "$file")
+                file_size=$(stat -c%s "$file")
                 filename=$(basename $file)
                 DEST="$tmp/to_send/$filename"
                 mkdir -p $DEST
-                if [ $st_size -gt $LIMIT ]; then
+                if [ $file_size -gt $LIMIT ]; then
                     splitFile $file $DEST $LIMIT
                 else
                     mv $file $DEST/
@@ -178,7 +178,7 @@ sendfiles $token
 import "import.xml" $token
 import "offers.xml" $token
 
-#   rm -rf $tmp
+rm -rf $tmp
 echo -e "Done!"
 
 exit $?

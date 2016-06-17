@@ -5,3 +5,5 @@ Makefile
 README.md
 Dockerfile
 tests
+build
+data
