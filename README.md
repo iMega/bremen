@@ -1,5 +1,7 @@
 # Bremen
 
+[![Build Status](https://semaphoreci.com/api/v1/irvis/bremen/branches/master/badge.svg)](https://semaphoreci.com/irvis/bremen)
+
 ```
 upstream bremen {
     server localhost:8083 fail_timeout=1s;
