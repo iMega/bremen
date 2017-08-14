@@ -16,6 +16,10 @@ TELEPORT_FILEMAN ?= imegateleport/tokio
 build:
 	@docker build -t $(IMAGE) .
 
+release:
+	@docker login --username $(DOCKER_USER) --password $(DOCKER_PASS)
+	@docker push imegateleport/york
+
 push:
 	@docker push $(IMAGE):latest
 
