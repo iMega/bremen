@@ -1,37 +1,28 @@
 IMAGE = imegateleport/bremen
 
-CONTAINERS = teleport_data \
-	teleport_acceptor \
-	teleport_fileman
-
-TELEPORT_DATA ?= imega/redis:1.0.0
 TELEPORT_DATA_PORT ?= 6379
-TELEPORT_DATA_IP ?=
-
-TELEPORT_ACCEPTOR ?= imegateleport/bremen
 TELEPORT_ACCEPTOR_PORT ?= -p 8183:80
 
-TELEPORT_FILEMAN ?= imegateleport/tokio
-
-build:
-	@docker build -t $(IMAGE) .
+CON_DIR = build/containers
+SRV = data fileman acceptor
+SRV_OBJ = $(addprefix $(CON_DIR)/teleport_,$(SRV))
 
 release:
 	@docker login --username $(DOCKER_USER) --password $(DOCKER_PASS)
 	@docker push $(IMAGE)
 
-push:
-	@docker push $(IMAGE):latest
+build:
+	@docker build -t $(IMAGE) .
 
-stop:
+stop: get_containers
 	@-docker stop $(CONTAINERS)
 
 clean: stop
 	@-docker rm -fv $(CONTAINERS)
-	@rm -rf build/containers/*
+	@rm -rf $(CURDIR)/build
 
-destroy: clean
-	@-docker rmi -f $(IMAGE)
+get_containers:
+	$(eval CONTAINERS := $(subst $(CON_DIR)/,,$(shell find $(CON_DIR) -type f)))
 
 discovery_data:
 	@while [ "`docker inspect -f {{.State.Running}} teleport_data`" != "true" ]; do \
@@ -39,42 +30,43 @@ discovery_data:
 	done
 	$(eval TELEPORT_DATA_IP = $(shell docker inspect --format '{{ .NetworkSettings.IPAddress }}' teleport_data))
 
-build/containers/teleport_acceptor: discovery_data build/containers/teleport_fileman
+$(CON_DIR)/teleport_acceptor: discovery_data
 	@mkdir -p $(shell dirname $@)
-	@docker run -d --name teleport_acceptor --restart=always \
+	@touch $@
+	@docker run -d --name teleport_acceptor \
 		--env REDIS_IP=$(TELEPORT_DATA_IP) \
 		--env REDIS_PORT=$(TELEPORT_DATA_PORT) \
 		--link teleport_fileman:fileman \
 		-v $(CURDIR)/data:/data \
 		$(TELEPORT_ACCEPTOR_PORT) \
-		$(TELEPORT_ACCEPTOR)
-	@touch $@
+		imegateleport/bremen
 
-build/containers/teleport_data:
+$(CON_DIR)/teleport_data:
 	@mkdir -p $(shell dirname $@)
-	@docker run -d --name teleport_data --restart=always -v $(CURDIR)/data:/data $(TELEPORT_DATA)
 	@touch $@
+	@docker run -d --name teleport_data -v $(CURDIR)/data:/data imega/redis
 
-build/containers/teleport_fileman:
+$(CON_DIR)/teleport_fileman:
 	@mkdir -p $(shell dirname $@)
-	@docker run -d --name teleport_fileman --restart=always -v $(CURDIR)/data:/data $(TELEPORT_FILEMAN)
 	@touch $@
+	@docker run -d --name teleport_fileman \
+		-p 873:873 \
+		-v $(CURDIR)/data:/data \
+		-v $(CURDIR)/tests/rsyncd.conf:/etc/rsyncd.conf \
+		-v $(CURDIR)/tests/wait-list.txt:/app/wait-list.txt \
+		alpine sh -c 'apk --upd --no-cache add rsync && /usr/bin/rsync --no-detach --daemon --config /etc/rsyncd.conf'
 
-build/containers/teleport_tester:
-	@cd tests;docker build -t imegateleport/bremen_tester .
+data_dir:
+	@mkdir -p $(CURDIR)/data/source $(CURDIR)/data/zip $(CURDIR)/data/unzip
 
-data_folder:
-	mkdir -p data/source data/zip data/unzip
-
-test: data_folder build/containers/teleport_data build/containers/teleport_acceptor build/containers/teleport_tester
+test: build data_dir $(SRV_OBJ)
 	@docker exec teleport_data \
 		sh -c 'echo "SET auth:9915e49a-4de1-41aa-9d7d-c9a687ec048d 8c279a62-88de-4d86-9b65-527c81ae767a" | redis-cli --pipe'
 	@docker run --rm -v $(CURDIR)/tests:/data \
+		-w /data \
 		--link teleport_acceptor:acceptor \
-		imegateleport/bremen_tester \
-		sh -c './simulator1c.sh acceptor "1C+Enterprise/8.3" "9915e49a-4de1-41aa-9d7d-c9a687ec048d:8c279a62-88de-4d86-9b65-527c81ae767a" fixtures/2.04'
+		alpine sh -c 'apk add --no-cache curl bash zip && \
+			./simulator1c.sh acceptor "1C+Enterprise/8.3" "9915e49a-4de1-41aa-9d7d-c9a687ec048d:8c279a62-88de-4d86-9b65-527c81ae767a" fixtures/2.04'
 	@if [ ! -f "$(CURDIR)/data/zip/9915e49a-4de1-41aa-9d7d-c9a687ec048d/9915e49a-4de1-41aa-9d7d-c9a687ec048d.zip" ];then \
 		exit 1; \
 	fi
-
-.PHONY: build

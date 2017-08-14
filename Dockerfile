@@ -1,10 +1,9 @@
-FROM alpine:3.3
+FROM alpine:3.4
 
 EXPOSE 80
 
-RUN apk add --update nginx-lua rsync && \
-    mkdir -p /tmp/nginx/client-body && \
-    rm -rf /var/cache/apk/*
+RUN apk add --no-cache nginx-lua rsync && \
+    mkdir -p /tmp/nginx/client-body /app/logs /run/nginx
 
 COPY . /
 
