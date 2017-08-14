@@ -60,8 +60,8 @@ data_dir:
 	@mkdir -p $(CURDIR)/data/source $(CURDIR)/data/zip $(CURDIR)/data/unzip
 
 test: build data_dir $(SRV_OBJ)
-	docker exec teleport_data \
-		sh -c 'echo "SET auth:9915e49a-4de1-41aa-9d7d-c9a687ec048d 8c279a62-88de-4d86-9b65-527c81ae767a" | redis-cli --pipe'
+	docker run --rm --link teleport_data:teleport_data alpine \
+		sh -c '(echo "SET auth:9915e49a-4de1-41aa-9d7d-c9a687ec048d 8c279a62-88de-4d86-9b65-527c81ae767a";sleep 1) | nc teleport_data 6379'
 	docker run --rm -v $(CURDIR)/tests:/data \
 		-w /data \
 		--link teleport_acceptor:acceptor \
