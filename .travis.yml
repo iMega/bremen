@@ -1,0 +1,19 @@
+branches:
+  only:
+  - master
+language: ruby
+services:
+- docker
+script:
+- make build || exit 1
+after_success:
+- |
+  [ "${TRAVIS_BRANCH}" == "master" ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ] &&
+    (make release DOCKER_USER=$DOCKER_USER DOCKER_PASS=$DOCKER_PASS)
+- 'curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json"
+  -H "Travis-API-Version: 3" -H "Authorization: token $TOKEN_TESTING" -d ''{"request":
+  {"branch":"master"}}'' https://api.travis-ci.org/repo/imega-teleport%2Ftesting/requests'
+notifications:
+  slack:
+    rooms:
+      secure: 4E2Hh30dEteby94BGK/sL/CB++Iy+g3vMBwGd4x9uey4r8SKmkN7uiCDjnFztH7GNbv/GLpvP/nN1k0H6ryT51BqdfFY5Y2jq9BpOG2w40C6FaouCouHrSrvPWsvjYUP0u+8cMrf9msA+hkV4/BbS1luTfqCnQ4MeIyVlqrqmMgJ9XqnlvO+Da9NI4zrlu15i4jB6uCB4DcB3PBSidAuyZf5ay592ehPfBvkxPowmkinlBmTN1N8O31W0YQUbhRYh6F7R54J5n8qb2ESJITvtiW/3HzmiwuVShqBSxxQhkdNzY4TxOPw0NlZlVd1m4ergiICvhrnn2K7lFAIjpXPyDgCFUC2MPFXW9vD1eAdgCfOGsKGWuXGO3Xd/ut4vk3GUPX0X7WF2vp/hCsJ3fBz+RM0e0zn4hanzAkZzkqtmV9ovcPOAFVeOLOCoeXhOy3OnQbESSZRy2YwoXeS+KwNiynYIB7RLNrnSOADDb52e5MZbIgwvmkWPgeXw7qLTLFDJlIdWosBJTnJAALaJtmnVflzR75dYEHFhs9HzqsSBRDGzHNbDpchPv9lTTKSIDhXchX7cWWYGdd3dPEwUCYknO+O796XUjU2pu5XJFddZxY9oCxii7HvfbSKaQSu9xSCvwpLZ+WCmGVJLrbvjzSyLVMWcduVrTkJ7asZE8DXVcU=
