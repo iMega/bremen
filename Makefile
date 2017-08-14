@@ -18,7 +18,7 @@ build:
 
 release:
 	@docker login --username $(DOCKER_USER) --password $(DOCKER_PASS)
-	@docker push imegateleport/york
+	@docker push $(IMAGE)
 
 push:
 	@docker push $(IMAGE):latest
