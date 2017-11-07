@@ -9,7 +9,7 @@ script:
 after_success:
 - |
   [ "${TRAVIS_BRANCH}" == "master" ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ] &&
-    (make release DOCKER_USER=$DOCKER_USER DOCKER_PASS=$DOCKER_PASS TAG=$TRAVIS_TAG)
+    (make release DOCKER_USER=$DOCKER_USER DOCKER_PASS=$DOCKER_PASS TAG=`echo $TRAVIS_COMMIT | cut -c -7`)
 - 'curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json"
   -H "Travis-API-Version: 3" -H "Authorization: token $TOKEN_TESTING" -d ''{"request":
   {"branch":"master"}}'' https://api.travis-ci.org/repo/imega-teleport%2Ftesting/requests'
