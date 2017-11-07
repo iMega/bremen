@@ -2,6 +2,8 @@
 
 [![Build Status](https://semaphoreci.com/api/v1/irvis/bremen/branches/master/badge.svg)](https://semaphoreci.com/irvis/bremen)
 
+[![Build Status](https://travis-ci.org/imega-teleport/bremen.svg?branch=master)](https://travis-ci.org/imega-teleport/bremen)
+
 ```
 upstream bremen {
     server localhost:8083 fail_timeout=1s;
