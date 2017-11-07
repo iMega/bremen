@@ -42,7 +42,7 @@ $(CON_DIR)/teleport_acceptor: discovery_data
 		--link teleport_fileman:fileman \
 		-v $(CURDIR)/data:/data \
 		$(TELEPORT_ACCEPTOR_PORT) \
-		imegateleport/bremen
+		$(IMAGE):$(TAG)
 
 $(CON_DIR)/teleport_data:
 	@mkdir -p $(shell dirname $@)
