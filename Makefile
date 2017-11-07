@@ -1,5 +1,5 @@
 IMAGE = imegateleport/bremen
-
+TAG = latest
 TELEPORT_DATA_PORT ?= 6379
 TELEPORT_ACCEPTOR_PORT ?= -p 8183:80
 
@@ -9,7 +9,7 @@ SRV_OBJ = $(addprefix $(CON_DIR)/teleport_,$(SRV))
 
 release:
 	@docker login --username $(DOCKER_USER) --password $(DOCKER_PASS)
-	@docker push $(IMAGE)
+	@docker push $(IMAGE):$(TAG)
 
 build:
 	@docker build -t $(IMAGE) .
