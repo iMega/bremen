@@ -15,7 +15,7 @@ deploy:
 	@curl -s -X POST -H "TOKEN: $(DEPLOY_TOKEN)" https://d.imega.ru -d '{"namespace":"imega-teleport", "project_name":"bremen", "tag":"$(TAG)"}'
 
 build:
-	@docker build -t $(IMAGE) .
+	@docker build -t $(IMAGE):$(TAG) .
 
 stop: get_containers
 	@-docker stop $(CONTAINERS)

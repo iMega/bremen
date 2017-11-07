@@ -5,7 +5,7 @@ language: ruby
 services:
 - docker
 script:
-- make test || exit 1
+- make test TAG=`echo $TRAVIS_COMMIT | cut -c -7` || exit 1
 after_success:
 - |
   [ "${TRAVIS_BRANCH}" == "master" ] && [ "$TRAVIS_EVENT_TYPE" != "cron" ] &&
