@@ -13,7 +13,7 @@ after_success:
 - 'curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json"
   -H "Travis-API-Version: 3" -H "Authorization: token $TOKEN_TESTING" -d ''{"request":
   {"branch":"master"}}'' https://api.travis-ci.org/repo/imega-teleport%2Ftesting/requests'
-- curl -X POST -H "TOKEN: $DEPLOY_TOKEN" https://d.imega.ru -d '{"namespace":"imega-teleport", "project_name":"bremen", "tag":"$TRAVIS_TAG"}'
+- make deploy DEPLOY_TOKEN=$DEPLOY_TOKEN TAG=$TRAVIS_TAG
 notifications:
   slack:
     rooms:

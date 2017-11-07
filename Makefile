@@ -11,6 +11,9 @@ release:
 	@docker login --username $(DOCKER_USER) --password $(DOCKER_PASS)
 	@docker push $(IMAGE):$(TAG)
 
+deploy:
+	@curl -s -X POST -H "TOKEN: $(DEPLOY_TOKEN)" https://d.imega.ru -d '{"namespace":"imega-teleport", "project_name":"bremen", "tag":"$(TAG)"}'
+
 build:
 	@docker build -t $(IMAGE) .
 
